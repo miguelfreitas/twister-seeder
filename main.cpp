@@ -339,13 +339,15 @@ extern "C" void* ThreadStats(void*) {
   } while(1);
 }
 
-static const string mainnet_seeds[] = {"dnsseed.bluematt.me", "bitseed.xf2.org", "dnsseed.bitcoin.dashjr.org", "seed.bitcoin.sipa.be", ""};
-static const string testnet_seeds[] = {"testnet-seed.bitcoin.petertodd.org", "static-testnet-seed.bitcoin.petertodd.org", ""};
+static const string mainnet_seeds[] = {""};
+static const string testnet_seeds[] = {""};
 static const string *seeds = mainnet_seeds;
 
-extern "C" void* ThreadSeeder(void*) {
+extern "C" void* ThreadSeeder(void *arg) {
+  CDnsSeedOpts *opts = (CDnsSeedOpts *)arg;
+
   if (!fTestNet){
-    db.Add(CService("kjy2eqzk4zwi5zd3.onion", 8333), true);
+    db.Add(CService(opts->ns, 28333, true), true);
   }
   do {
     for (int i=0; seeds[i] != ""; i++) {
@@ -413,7 +415,7 @@ int main(int argc, char **argv) {
     printf("done\n");
   }
   printf("Starting seeder...");
-  pthread_create(&threadSeed, NULL, ThreadSeeder, NULL);
+  pthread_create(&threadSeed, NULL, ThreadSeeder, &opts);
   printf("done\n");
   printf("Starting %i crawler threads...", opts.nThreads);
   pthread_attr_t attr_crawler;
