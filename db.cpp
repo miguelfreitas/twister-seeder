@@ -180,8 +180,8 @@ void CAddrDb::GetIPs_(set<CNetAddr>& ips, int max, const bool* nets) {
     }
     return;
   }
-  if (max > goodId.size() / 2)
-    max = goodId.size() / 2;
+  if (max > goodId.size() / 1) // [MF] /2
+    max = goodId.size() / 1; // [MF] /2
   if (max < 1)
     max = 1;
   int low = *goodId.begin();
