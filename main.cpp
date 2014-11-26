@@ -31,7 +31,7 @@ public:
   CDnsSeedOpts() : nThreads(96), nDnsThreads(4), nPort(53), mbox(NULL), ns(NULL), host(NULL), tor(NULL), fUseTestNet(false), fWipeBan(false), fWipeIgnore(false) {}
 
   void ParseCommandLine(int argc, char **argv) {
-    static const char *help = "Bitcoin-seeder\n"
+    static const char *help = "Twister-seeder\n"
                               "Usage: %s -h <host> -n <ns> [-m <mbox>] [-t <threads>] [-p <port>]\n"
                               "\n"
                               "Options:\n"
@@ -61,11 +61,11 @@ public:
         {"testnet", no_argument, &fUseTestNet, 1},
         {"wipeban", no_argument, &fWipeBan, 1},
         {"wipeignore", no_argument, &fWipeBan, 1},
-        {"help", no_argument, 0, 'h'},
+        {"help", no_argument, 0, '?'},
         {0, 0, 0, 0}
       };
       int option_index = 0;
-      int c = getopt_long(argc, argv, "h:n:m:t:p:d:o:", long_options, &option_index);
+      int c = getopt_long(argc, argv, "h:n:m:t:d:p:o:?", long_options, &option_index);
       if (c == -1) break;
       switch (c) {
         case 'h': {
@@ -112,8 +112,15 @@ public:
         }
       }
     }
-    if (host != NULL && ns == NULL) showHelp = true;
-    if (showHelp) fprintf(stderr, help, argv[0]);
+
+    if (host == NULL || ns == NULL) {
+      fprintf(stderr, "Wanna dance? RTFM, babe!\n\n");
+      showHelp = true;
+    }
+    if (showHelp) {
+      fprintf(stderr, help, argv[0]);
+      exit(EXIT_SUCCESS);
+    }
   }
 };
 
