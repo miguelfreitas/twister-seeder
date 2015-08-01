@@ -5,6 +5,7 @@
 
 typedef struct {
     int v;
+    unsigned short port;
     union {
        unsigned char v4[4];
        unsigned char v6[16];
@@ -19,6 +20,7 @@ typedef struct {
   const char *ns;
   const char *mbox;
   int (*cb)(void *opt, addr_t *addr, int max, int ipv4, int ipv6);
+  int (*cbNonStd)(void *opt, addr_t *addr, int max, int ipv4, int ipv6);
   // stats
   uint64_t nRequests;
 } dns_opt_t;

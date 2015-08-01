@@ -102,7 +102,7 @@ public:
   }
   
   bool IsGood() const {
-    if (ip.GetPort() != GetDefaultPort()) return false;
+    /*if (ip.GetPort() != GetDefaultPort()) return false;*/ // [MF] we now permit non std ports
     if (!(services & NODE_NETWORK)) return false;
     if (!ip.IsRoutable()) return false;
     if (clientVersion && clientVersion < REQUIRE_VERSION) return false;
@@ -220,7 +220,7 @@ protected:
   void Bad_(const CService &ip, int ban);  // mark an IP as bad (and optionally ban it) (must have been returned by Get_)
   void Skipped_(const CService &ip);       // mark an IP as skipped (must have been returned by Get_)
   int Lookup_(const CService &ip);         // look up id of an IP
-  void GetIPs_(std::set<CNetAddr>& ips, int max, const bool *nets); // get a random set of IPs (shared lock only)
+  void GetIPs_(std::set<CService>& ips, int max, const bool *nets); // get a random set of IPs (shared lock only)
 
 public:
   std::map<CService, time_t> banned; // nodes that are banned, with their unban time (a)
@@ -352,7 +352,7 @@ public:
       }
     }
   }
-  void GetIPs(std::set<CNetAddr>& ips, int max, const bool *nets) {
+  void GetIPs(std::set<CService>& ips, int max, const bool *nets) {
     SHARED_CRITICAL_BLOCK(cs)
       GetIPs_(ips, max, nets);
   }

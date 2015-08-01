@@ -160,13 +160,16 @@ extern "C" void* ThreadCrawler(void* data) {
 }
 
 extern "C" int GetIPList(void *thread, addr_t *addr, int max, int ipv4, int ipv6);
+extern "C" int GetIPListNonStd(void *thread, addr_t *addr, int max, int ipv4, int ipv6);
 
 class CDnsThread {
 public:
   dns_opt_t dns_opt; // must be first
   const int id;
   vector<addr_t> cache;
+  vector<addr_t> cacheNonStd; // [MF] non std port
   int nIPv4, nIPv6;
+  int nonStdIPv4, nonStdIPv6;
   time_t cacheTime;
   unsigned int cacheHits;
   uint64_t dbQueries;
@@ -180,29 +183,43 @@ public:
     time_t now = time(NULL);
     cacheHits++;
     if (force || cacheHits > (cache.size()*cache.size()/400) || (cacheHits*cacheHits > cache.size() / 20 && (now - cacheTime > 5))) {
-      set<CNetAddr> ips;
+      set<CService> ips;
       db.GetIPs(ips, 1000, nets);
       dbQueries++;
       cache.clear();
-      nIPv4 = 0;
-      nIPv6 = 0;
+      cacheNonStd.clear();
+      nIPv4 = nonStdIPv4 = 0;
+      nIPv6 = nonStdIPv6 = 0;
       cache.reserve(ips.size());
-      for (set<CNetAddr>::iterator it = ips.begin(); it != ips.end(); it++) {
+      cacheNonStd.reserve(ips.size());
+      for (set<CService>::iterator it = ips.begin(); it != ips.end(); it++) {
         struct in_addr addr;
         struct in6_addr addr6;
         if ((*it).GetInAddr(&addr)) {
           addr_t a;
           a.v = 4;
+          a.port = (*it).GetPort();
           memcpy(&a.data.v4, &addr, 4);
-          cache.push_back(a);
-          nIPv4++;
+          if( a.port == GetDefaultPort() ) {
+            cache.push_back(a);
+            nIPv4++;
+          } else {
+            cacheNonStd.push_back(a);
+            nonStdIPv4++;
+          }
 #ifdef USE_IPV6
         } else if ((*it).GetIn6Addr(&addr6)) {
           addr_t a;
           a.v = 6;
+          a.port = (*it).GetPort();
           memcpy(&a.data.v6, &addr6, 16);
-          cache.push_back(a);
-          nIPv6++;
+          if( a.port == GetDefaultPort() ) {
+            cache.push_back(a);
+            nIPv6++;
+          } else {
+            cacheNonStd.push_back(a);
+            nonStdIPv6++;
+          }
 #endif
         }
       }
@@ -218,6 +235,7 @@ public:
     dns_opt.datattl = 60;
     dns_opt.nsttl = 40000;
     dns_opt.cb = GetIPList;
+    dns_opt.cbNonStd = GetIPListNonStd;
     dns_opt.port = opts->nPort;
     dns_opt.nRequests = 0;
     cache.clear();
@@ -234,6 +252,18 @@ public:
     dnsserver(&dns_opt);
   }
 };
+
+unsigned short crc16(unsigned char* data_p, unsigned char length){
+    unsigned char x;
+    unsigned short crc = 0xFFFF;
+
+    while (length--){
+        x = crc >> 8 ^ *data_p++;
+        x ^= x>>4;
+        crc = (crc << 8) ^ ((unsigned short)(x << 12)) ^ ((unsigned short)(x <<5)) ^ ((unsigned short)x);
+    }
+    return crc;
+}
 
 extern "C" int GetIPList(void *data, addr_t* addr, int max, int ipv4, int ipv6) {
   CDnsThread *thread = (CDnsThread*)data;
@@ -260,6 +290,48 @@ extern "C" int GetIPList(void *data, addr_t* addr, int max, int ipv4, int ipv6) 
     thread->cache[j] = thread->cache[i];
     thread->cache[i] = addr[i];
     i++;
+  }
+  return max;
+}
+
+extern "C" int GetIPListNonStd(void *data, addr_t* addr, int max, int ipv4, int ipv6) {
+  CDnsThread *thread = (CDnsThread*)data;
+  thread->cacheHit();
+  unsigned int size = thread->cacheNonStd.size();
+  unsigned int maxmax = (ipv4 ? thread->nonStdIPv4 : 0) + (ipv6 ? thread->nonStdIPv6 : 0);
+  
+  if (max > 2 * size)
+    max = 2 * size;
+  if (max > 2 * maxmax)
+    max = 2 * maxmax;
+  max -= max % 2;
+  int i=0;
+  while (i+1<max) {
+    int j = i/2 + (rand() % (size - i/2));
+    unsigned short crcAddr = 0;
+    do {
+        bool ok = (ipv4 && thread->cacheNonStd[j].v == 4) || 
+                  (ipv6 && thread->cacheNonStd[j].v == 6);
+        if (ok) break;
+        j++;
+        if (j==size)
+            j=i/2;
+    } while(1);
+    addr[i] = thread->cacheNonStd[j];
+    thread->cacheNonStd[j] = thread->cacheNonStd[i/2];
+    thread->cacheNonStd[i/2] = addr[i];
+    
+    if( addr[i].v == 4 ) {
+      crcAddr = crc16(addr[i].data.v4,4);
+    } else {
+      crcAddr = crc16(addr[i].data.v6,16);
+    }
+    addr[i+1].v = 4;
+    addr[i+1].data.v4[0] = crcAddr >> 8;
+    addr[i+1].data.v4[1] = crcAddr & 0xff;
+    addr[i+1].data.v4[2] = addr[i].port >> 8;
+    addr[i+1].data.v4[3] = addr[i].port & 0xff;
+    i+=2;
   }
   return max;
 }
