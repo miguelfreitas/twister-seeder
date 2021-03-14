@@ -341,6 +341,7 @@ vector<CDnsThread*> dnsThread;
 extern "C" void* ThreadDNS(void* arg) {
   CDnsThread *thread = (CDnsThread*)arg;
   thread->run();
+  return NULL;
 }
 
 int StatCompare(const CAddrReport& a, const CAddrReport& b) {
