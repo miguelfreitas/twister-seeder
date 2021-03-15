@@ -232,7 +232,7 @@ public:
       stats.nTracked = ourId.size();
       stats.nGood = goodId.size();
       stats.nNew = unkId.size();
-      stats.nAge = time(NULL) - idToInfo[ourId[0]].ourLastTry;
+      stats.nAge = ourId.size() > 0 ? time(NULL) - idToInfo[ourId[0]].ourLastTry : 0;
     }
   }
 
