@@ -72,17 +72,17 @@ public:
           host = optarg;
           break;
         }
-        
+
         case 'm': {
           mbox = optarg;
           break;
         }
-        
+
         case 'n': {
           ns = optarg;
           break;
         }
-        
+
         case 't': {
           int n = strtol(optarg, NULL, 10);
           if (n > 0 && n < 1000) nThreads = n;
@@ -100,7 +100,7 @@ public:
           if (p > 0 && p < 65536) nPort = p;
           break;
         }
-        
+
         case 'o': {
           tor = optarg;
           break;
@@ -270,7 +270,7 @@ extern "C" int GetIPList(void *data, addr_t* addr, int max, int ipv4, int ipv6) 
   thread->cacheHit();
   unsigned int size = thread->cache.size();
   unsigned int maxmax = (ipv4 ? thread->nIPv4 : 0) + (ipv6 ? thread->nIPv6 : 0);
-  
+
   if (max > size)
     max = size;
   if (max > maxmax)
@@ -279,7 +279,7 @@ extern "C" int GetIPList(void *data, addr_t* addr, int max, int ipv4, int ipv6) 
   while (i<max) {
     int j = i + (rand() % (size - i));
     do {
-        bool ok = (ipv4 && thread->cache[j].v == 4) || 
+        bool ok = (ipv4 && thread->cache[j].v == 4) ||
                   (ipv6 && thread->cache[j].v == 6);
         if (ok) break;
         j++;
@@ -299,7 +299,7 @@ extern "C" int GetIPListNonStd(void *data, addr_t* addr, int max, int ipv4, int 
   thread->cacheHit();
   unsigned int size = thread->cacheNonStd.size();
   unsigned int maxmax = (ipv4 ? thread->nonStdIPv4 : 0) + (ipv6 ? thread->nonStdIPv6 : 0);
-  
+
   if (max > 2 * size)
     max = 2 * size;
   if (max > 2 * maxmax)
@@ -310,7 +310,7 @@ extern "C" int GetIPListNonStd(void *data, addr_t* addr, int max, int ipv4, int 
     int j = i/2 + (rand() % (size - i/2));
     unsigned short crcAddr = 0;
     do {
-        bool ok = (ipv4 && thread->cacheNonStd[j].v == 4) || 
+        bool ok = (ipv4 && thread->cacheNonStd[j].v == 4) ||
                   (ipv6 && thread->cacheNonStd[j].v == 6);
         if (ok) break;
         j++;
@@ -320,7 +320,7 @@ extern "C" int GetIPListNonStd(void *data, addr_t* addr, int max, int ipv4, int 
     addr[i] = thread->cacheNonStd[j];
     thread->cacheNonStd[j] = thread->cacheNonStd[i/2];
     thread->cacheNonStd[i/2] = addr[i];
-    
+
     if( addr[i].v == 4 ) {
       crcAddr = crc16(addr[i].data.v4,4);
     } else {
@@ -423,7 +423,7 @@ extern "C" void* ThreadStats(void*) {
   } while(1);
 }
 
-static const string mainnet_seeds[] = {"seed.twister.net.co","seed2.twister.net.co","seed3.twister.net.co","twisterseed.tk","twisterarmyseed.tk",""};
+static const string mainnet_seeds[] = {"seed.twister.net.co","seed2.twister.net.co","seed3.twister.net.co","twisterseed.tk","twisterarmyseed.tk","seed.twisterarmy.org",""};
 static const string testnet_seeds[] = {""};
 static const string *seeds = mainnet_seeds;
 
