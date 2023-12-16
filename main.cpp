@@ -423,7 +423,7 @@ extern "C" void* ThreadStats(void*) {
   } while(1);
 }
 
-static const string mainnet_seeds[] = {"seed.twister.net.co","seed2.twister.net.co","seed3.twister.net.co","twisterseed.tk","twisterarmyseed.tk","seed.ta.conf",""};
+static const string mainnet_seeds[] = {"seed.twister.net.co","seed2.twister.net.co","seed3.twister.net.co","twisterseed.tk","twisterarmyseed.tk","seed.twisterarmy.dedyn.io","seed.ta.conf",""};
 static const string testnet_seeds[] = {""};
 static const string *seeds = mainnet_seeds;
 
